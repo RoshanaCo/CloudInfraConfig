@@ -1,0 +1,61 @@
+
+global:
+  storageClass: "local-storage-rab"
+
+image:
+  registry: docker.io
+  repository: bitnami/rabbitmq
+  tag: 3.12.10-debian-11-r1
+  digest: ""
+  pullPolicy: IfNotPresent
+
+serviceBindings:
+  enabled: false
+
+auth:
+
+  username: user
+
+clustering:
+
+  enabled: true
+
+replicaCount: 3
+
+ulimitNofiles: ""
+  
+affinity: {}
+  #WIP
+  #requiredDuringSchedulingIgnoredDuringExecution:
+  #- labelSelector:
+  #    matchExpressions:
+  #      - key: "app.kubernetes.io/component"
+  #        operator: In
+  #        values:
+  #        - data
+  #      - key: "app"
+  #        operator: In
+  #        values:
+  #        - data
+  #  topologyKey: "kubernetes.io/hostname"
+
+resources:
+
+  limits: {}
+
+  requests: {}
+
+persistence:
+
+  enabled: true
+
+  storageClass: "local"
+
+  accessModes:
+    - ReadWriteOnce
+
+  mountPath: /bitnami/rabbitmq/mnesia
+
+  size: 8Gi
+
+

@@ -1,0 +1,76 @@
+
+network:
+ calico_network_backend: vxlan
+calico_ipip_mode: 'Never'
+
+
+# Common configurations across all nodes
+kube_read_only_port: "10255"
+
+kube_api_advertise_address: "{{ node1 }}"
+kube_proxy_mode: "ipvs"
+kube_proxy_strict_arp: true
+
+kubelet_extra_args: # Add specific kubelet options for performance if needed
+
+kube_proxy_extra_args: # Add specific kube-proxy options for performance if needed
+
+
+
+
+kube_version: v1.27.0  # Update to the latest stable version
+
+# Network configurations
+kube_pods_subnet: "192.168.0.0/16"
+kube_service_addresses: "192.168.64.0/18"
+
+# Etcd settings
+etcd_memory_limit: 4096M
+etcd_quota_backend_bytes: 4294967296
+
+# Kubernetes API server settings
+kube_api_server_insecure_bind_address: "0.0.0.0"
+kube_api_server_insecure_port: "8080"
+kube_api_server_bind_port: "6443"
+
+# High performance and scaling options
+kubelet_max_pods: 250 # Increase if required based on workload
+kubelet_network_plugin: "cni"
+kubelet_cgroup_driver: "systemd"
+kubelet_extra_args: # Additional arguments for the Kubelet
+
+# Add-ons or features specific configurations
+# Example: enable metrics-server, etc.
+
+# Container runtime configurations if using Docker, CRI-O, or containerd
+container_manager: "docker"  # or "containerd" or "crio"
+docker_storage_options:
+  - "--storage-driver=overlay2"
+  # Other specific Docker storage options if needed
+
+
+kube_proxy_mode: "iptables"  # Change to iptables mode for better collocation support
+kube_proxy_strict_arp: true
+
+kubelet_extra_args:
+  cgroup-driver: "systemd"  # Set cgroup driver to systemd
+  topology-manager-policy: "best-effort"  # For colocation support
+
+# Networking optimizations
+kube_proxy_extra_args:
+  proxy-mode: "userspace"  # Experiment with different proxy modes for performance
+  conntrack-max-per-core: 0
+
+# Network plugin configurations (e.g., for Calico)
+kube_network_plugin: calico
+kube_calico_ip_autodetection_method: "can-reach=www.google.com"
+
+# Configure specific networking settings for Calico
+calico_ipip_mode: "Always"
+calico_node_to_node_encryption: true
+calico_ipam: "host-local"
+calico_mtu: 1500  # Adjust MTU if required for better network performance
+
+# Other colocation-specific configurations
+kubelet_reservation_cpu: "50m"
+kubelet_reservation_memory: "50Mi"

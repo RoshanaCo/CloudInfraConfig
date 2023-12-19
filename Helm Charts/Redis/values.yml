@@ -1,0 +1,65 @@
+image:
+  registry: docker.io
+  repository: bitnami/redis
+  tag: 7.2.3-debian-11-r1
+  digest: ""
+  pullPolicy: IfNotPresent
+
+architecture: replication
+
+auth:
+  enabled: true
+  sentinel: true
+
+
+commonConfiguration: |-
+  # Enable AOF https://redis.io/topics/persistence#append-only-file
+  appendonly yes
+  # Disable RDB persistence, AOF persistence already enabled.
+  save ""
+
+master:
+  count: 1
+  configuration: ""
+
+  disableCommands:
+    - FLUSHDB
+    - FLUSHALL
+
+  persistence:
+    enabled: true
+    path: /data
+    storageClass: "local-storage-red"
+    accessModes:
+      - ReadWriteOnce
+    size: 8Gi
+
+  serviceAccount:
+    create: true
+
+replica:
+  kind: StatefulSet
+  replicaCount: 2
+
+  configuration: ""
+
+  disableCommands:
+    - FLUSHDB
+    - FLUSHALL
+
+  persistence:
+    enabled: true
+    path: /data
+    storageClass: "local-storage-red"
+    accessModes:
+      - ReadWriteOnce
+
+  serviceAccount:
+    create: true
+
+rbac:
+  create: true
+
+serviceAccount:
+  create: true
+

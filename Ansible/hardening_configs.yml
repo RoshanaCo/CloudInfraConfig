@@ -1,0 +1,63 @@
+- name: Harden Servers
+  hosts: servers
+  become: true
+
+  tasks:
+    - name: Update Packages
+      apt:
+        update_cache: yes  
+        upgrade: yes
+      when: ansible_os_family == "Ubuntu"
+
+    - name: Secure SSH Configuration  
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: "{{ item.regexp }}"
+        line: "{{ item.line }}"
+        state: present
+      with_items:
+        - { regexp: '^PermitRootLogin', line: 'PermitRootLogin no' }
+        - { regexp: '^PasswordAuthentication', line: 'PasswordAuthentication no' }
+        - { regexp: '^X11Forwarding', line: 'X11Forwarding no' }
+      notify: Restart SSH
+
+    - name: Set sysctl Parameters
+      sysctl:
+        name: "{{ item.name }}"
+        value: "{{ item.value }}"
+        state: present
+        sysctl_set: yes
+      with_items:
+        - { name: 'net.ipv4.tcp_syncookies', value: 1 }
+        - { name: 'net.ipv4.tcp_fin_timeout', value: 15 }
+
+    - name: Allow HTTP & HTTPS through UFW  
+      ufw:
+        rule: allow
+        port: "{{ item }}"
+      loop:
+        - 80
+        - 443
+        - 22
+      notify: Reload UFW
+
+    - name: Install sshguard
+      package:
+        name: sshguard
+        state: present
+
+  handlers:
+    - name: Restart SSH
+      service:
+        name: sshd
+        state: restarted
+
+    - name: Disable additional services
+      service:
+        name: "{{ item }}"
+        state: stopped
+        enabled: no
+      loop:
+        - avahi-daemon
+        - rpcbind
+        - cron

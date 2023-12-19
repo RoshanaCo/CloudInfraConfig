@@ -1,0 +1,74 @@
+postgresql:
+  image:
+    registry: docker.io
+    repository: bitnami/postgresql-repmgr
+    tag: 16.1.0-debian-11-r11
+
+  replicaCount: 3
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+  containerPorts:
+    postgresql: 5432
+
+  nodeSelector:
+    kube-role: worker
+
+  # Database optimization
+  extendedConf: |-
+    max_connections = 400  # Maximum concurrent connections
+    shared_buffers = 8GB  # Memory allocated for caching data
+    work_mem = 64MB       # Memory for sorting and hashing operations
+    effective_cache_size = 12GB  # Estimated available memory for disk caching
+    wal_level = replica       # Adjust based on replication requirements
+    autovacuum = on
+    autovacuum_max_workers = 12
+    autovacuum_naptime = 10min
+    autovacuum_vacuum_scale_factor = 0.05
+    autovacuum_analyze_scale_factor = 0.02
+    random_page_cost = 1.2  # Adjust based on the storage SSD
+
+  affinity:
+    podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+                - key: "role"
+                  operator: In
+                  values:
+                  - data
+            topologyKey: "kubernetes.io/hostname"
+
+  pdb:
+    create: true
+    minAvailable: 2
+    maxUnavailable: ""
+
+pgpool:
+  image:
+    registry: docker.io
+    repository: bitnami/pgpool
+    tag: 4.4.5-debian-11-r0
+    digest: ""
+
+    pullPolicy: IfNotPresent
+  replicaCount: 1
+  nodeSelector:
+    kube-role: worker
+
+rbac:
+  create: true
+
+serviceAccount:
+  create: true
+
+persistence:
+  enabled: true
+  storageClass: "local-storage-post"
+  mountPath: /bitnami/postgresql
+  accessModes:
+    - ReadWriteOnce
+  size: 8Gi
+
